@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
   Copy,
@@ -11,12 +11,28 @@ import {
 } from "lucide-react";
 import { useQrStore } from "@/hooks/use-qr-store";
 import { useQrPayload } from "@/hooks/use-qr-payload";
+import { useMounted } from "@/hooks/use-mounted";
+
+type DoneKey = "png" | "svg" | "payload";
 
 export function ExportControls() {
   const activeType = useQrStore((s) => s.activeType);
   const customization = useQrStore((s) => s.customization);
   const { payload, svgString } = useQrPayload();
-  const [copied, setCopied] = useState<string | null>(null);
+  const mounted = useMounted();
+  const [done, setDone] = useState<DoneKey | null>(null);
+  // Announced via the role="status" live region below (visual feedback alone
+  // is invisible to screen-reader users).
+  const [status, setStatus] = useState("");
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Brief "Saved"/"Copied" state on the button + a spoken confirmation.
+  const flash = useCallback((key: DoneKey, message: string) => {
+    setDone(key);
+    setStatus(message);
+    if (doneTimer.current) clearTimeout(doneTimer.current);
+    doneTimer.current = setTimeout(() => setDone(null), 2000);
+  }, []);
 
   const getFilename = useCallback(
     (ext: string) => `qr-${activeType}-${Date.now()}.${ext}`,
@@ -32,7 +48,8 @@ export function ExportControls() {
     a.download = getFilename("svg");
     a.click();
     URL.revokeObjectURL(url);
-  }, [svgString, getFilename]);
+    flash("svg", "QR code downloaded as SVG");
+  }, [svgString, getFilename, flash]);
 
   const handleDownloadPng = useCallback(async () => {
     if (!svgString) return;
@@ -58,6 +75,9 @@ export function ExportControls() {
             a.click();
             // Revoke the PNG blob URL once the download is triggered.
             URL.revokeObjectURL(pngUrl);
+            flash("png", "QR code downloaded as PNG");
+          } else {
+            setStatus("PNG export failed — try SVG instead");
           }
           resolve();
         }, "image/png");
@@ -65,21 +85,21 @@ export function ExportControls() {
       img.onerror = () => {
         // Clean up on rasterization failure so the blob URL doesn't leak.
         URL.revokeObjectURL(url);
+        setStatus("PNG export failed — try SVG instead");
         resolve();
       };
       img.src = url;
     });
-  }, [svgString, customization.size, getFilename]);
+  }, [svgString, customization.size, getFilename, flash]);
 
   const handleCopyPayload = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(payload.value);
-      setCopied("payload");
-      setTimeout(() => setCopied(null), 2000);
+      flash("payload", "QR code text copied to clipboard");
     } catch {
-      /* noop */
+      setStatus("Could not copy to clipboard");
     }
-  }, [payload.value]);
+  }, [payload.value, flash]);
 
   const handleShare = useCallback(async () => {
     if (!svgString || !navigator.share) return;
@@ -99,9 +119,16 @@ export function ExportControls() {
   // Gate on the actual render result: if there's no SVG (invalid or over the
   // ECC capacity), every export handler would silently no-op.
   const disabled = !svgString;
+  // Share is a Web Share API feature — hide the button where it doesn't exist
+  // instead of showing a button that can only fail. Deferred to after mount so
+  // the server HTML and first client render agree.
+  const canShare = mounted && typeof navigator !== "undefined" && !!navigator.share;
 
   return (
     <div className="grid grid-cols-2 gap-1.5">
+      <span role="status" className="sr-only">
+        {status}
+      </span>
       <motion.button
         onClick={handleDownloadPng}
         disabled={disabled}
@@ -109,8 +136,12 @@ export function ExportControls() {
         whileTap={disabled ? undefined : { scale: 0.97 }}
         className="btn-primary justify-center group"
       >
-        <FileImage size={14} className="group-hover:text-accent" />
-        PNG
+        {done === "png" ? (
+          <Check size={14} className="text-accent" />
+        ) : (
+          <FileImage size={14} className="group-hover:text-accent" />
+        )}
+        {done === "png" ? "Saved" : "PNG"}
       </motion.button>
       <motion.button
         onClick={handleDownloadSvg}
@@ -119,33 +150,39 @@ export function ExportControls() {
         whileTap={disabled ? undefined : { scale: 0.97 }}
         className="btn-primary justify-center group"
       >
-        <FileText size={14} className="group-hover:text-accent" />
-        SVG
+        {done === "svg" ? (
+          <Check size={14} className="text-accent" />
+        ) : (
+          <FileText size={14} className="group-hover:text-accent" />
+        )}
+        {done === "svg" ? "Saved" : "SVG"}
       </motion.button>
       <motion.button
         onClick={handleCopyPayload}
         disabled={disabled}
         whileHover={disabled ? undefined : { scale: 1.03 }}
         whileTap={disabled ? undefined : { scale: 0.97 }}
-        className="btn-ghost justify-center group"
+        className={`btn-ghost justify-center group ${canShare ? "" : "col-span-2"}`}
       >
-        {copied === "payload" ? (
+        {done === "payload" ? (
           <Check size={14} className="text-accent" />
         ) : (
           <Copy size={14} className="group-hover:text-accent" />
         )}
-        {copied === "payload" ? "Copied" : "Copy text"}
+        {done === "payload" ? "Copied" : "Copy text"}
       </motion.button>
-      <motion.button
-        onClick={handleShare}
-        disabled={disabled}
-        whileHover={disabled ? undefined : { scale: 1.03 }}
-        whileTap={disabled ? undefined : { scale: 0.97 }}
-        className="btn-ghost justify-center group"
-      >
-        <Share2 size={14} className="group-hover:text-accent" />
-        Share
-      </motion.button>
+      {canShare && (
+        <motion.button
+          onClick={handleShare}
+          disabled={disabled}
+          whileHover={disabled ? undefined : { scale: 1.03 }}
+          whileTap={disabled ? undefined : { scale: 0.97 }}
+          className="btn-ghost justify-center group"
+        >
+          <Share2 size={14} className="group-hover:text-accent" />
+          Share
+        </motion.button>
+      )}
     </div>
   );
 }

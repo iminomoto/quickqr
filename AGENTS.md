@@ -27,6 +27,7 @@ Form fields (Zustand) → `src/lib/payload-builders.ts` (`buildPayload` / `valid
 - `useQrPayload` is the only place that runs payload → validate → render. Preview, export, and payload-preview all consume it; don't rebuild the chain in a component.
 - `validatePayload(type, fields, value?, ecLevel?)` is ECC-aware: `MAX_CAPACITY_BYTES` in `payload-builders.ts` mirrors what `generateMatrix` can encode, so an over-capacity payload is an **error** (exports disable, history refuses it) and a dense one is a **warning**. Keep any new call site passing the active `errorCorrectionLevel`.
 - `qr-renderer.ts` uses `QRCode.create()` for the matrix only — never `qrcode.toDataURL`/`toFile`. It merges all modules into 3 `<path>` groups (data dots, eye frames, eye balls); preserve that when adding styles.
+- Scannability (colors / quiet zone) is advisory, not validation: `getScannabilityWarnings(fg, bg, quietZone)` in `src/lib/qr-utils.ts` returns warning strings (inverted polarity, <3:1 contrast, quiet zone off) that `preview-panel.tsx` merges into the bottom bar. Defaults are dark-on-light for a reason — don't invert them.
 - Adding a QR type touches: `src/types/index.ts` (`QrType` is derived from `QrFieldsMap` keys), all three switches in `payload-builders.ts`, `DEFAULT_FIELDS` in `use-qr-store.ts`, and a new form in `src/components/input-forms/`.
 
 ## State
@@ -48,4 +49,5 @@ Zustand store in `src/hooks/use-qr-store.ts`, persisted to localStorage as `qr-h
 - It is inlined **at build time**: the Dockerfile declares `ARG NEXT_PUBLIC_SITE_URL` (build/dev stages) and compose passes it through — copy `.env.example` to `.env` (git-ignored) so compose picks it up.
 - `src/lib/site.ts` sanitizes the value (empty → unset, adds a missing `https://`, strips quotes/slashes) and falls back to the placeholder instead of throwing — compose passes `""` when nothing is configured, and `new URL()` in `app/layout.tsx` would crash at module evaluation. Don't read `process.env.NEXT_PUBLIC_SITE_URL` anywhere else.
 - Security headers (incl. a production-only CSP) live in `next.config.ts` `headers()`. Verify new external scripts/fonts/images against the CSP before adding them.
-- Prod: `docker compose up prod` (multi-stage, `output: "standalone"`). Dev: `docker compose --profile dev up app` (bind-mounts `./src` and `./app`).
+- Prod: `docker compose up prod` (multi-stage, `output: "standalone"`, HEALTHCHECK on `/`). Dev: `docker compose --profile dev up app` (bind-mounts `./src` and `./app`, published on host port **3001** so it can run beside prod).
+- CI: `.github/workflows/ci.yml` runs lint → typecheck → test → build on pushes/PRs. Local git identity is set repo-locally (`QuickQR <quickqr@localhost>`).

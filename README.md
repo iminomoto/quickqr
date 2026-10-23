@@ -51,15 +51,20 @@ automatically for the image build.
 # Configure the canonical origin (read by compose for build args)
 cp .env.example .env   # then edit NEXT_PUBLIC_SITE_URL
 
-# Development
+# Development (published on host port 3001, so it can run beside prod)
 docker compose --profile dev up app
 
-# Production
+# Production (http://localhost:3000, container has a HEALTHCHECK on /)
 docker compose up prod --build
 ```
 
 Production responses include security headers (nosniff, frame denial,
 referrer policy, HSTS, and a CSP) configured in `next.config.ts`.
+
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs `npm ci`, lint, typecheck, tests, and a
+production build on every push to `main` and every pull request.
 
 ## Project Structure
 

@@ -207,9 +207,15 @@ body {
 }
 
 .input-ve:focus {
-  outline: none;
   border-color: var(--color-accent);
   box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+/* Keyboard focus must stay clearly visible (the box-shadow above alone is a
+   1px hint) — let the global focus ring apply to inputs too. */
+.input-ve:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* ═══════════════════════════════════════
@@ -632,8 +638,18 @@ input[type="range"]::-moz-range-thumb {
    ═══════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .splash-screen {
     will-change: auto;
+  }
+
+  /* Decorative infinite animations. */
+  .particle,
+  .scroll-arrow {
+    animation: none !important;
   }
 
   .splash-row-text.is-hero::before {

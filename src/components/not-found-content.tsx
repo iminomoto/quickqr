@@ -63,7 +63,8 @@ export function NotFoundContent() {
       <div className="relative z-10 flex min-h-screen flex-col">
         <Header />
 
-        <main className="flex flex-1 items-center justify-center px-4 py-6">
+        {/* Not a <main>: app/not-found.tsx renders inside the layout's main. */}
+        <div className="flex flex-1 items-center justify-center px-4 py-6">
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -120,7 +121,7 @@ export function NotFoundContent() {
               </Link>
             </motion.div>
           </motion.div>
-        </main>
+        </div>
       </div>
     </div>
   );

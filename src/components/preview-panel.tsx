@@ -4,11 +4,21 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShieldAlert, TriangleAlert, QrCode } from "lucide-react";
 import { useQrStore } from "@/hooks/use-qr-store";
 import { useQrPayload } from "@/hooks/use-qr-payload";
+import { getScannabilityWarnings } from "@/lib/qr-utils";
 
 export function PreviewPanel() {
   const activeType = useQrStore((s) => s.activeType);
   const customization = useQrStore((s) => s.customization);
   const { payload, validation, svgString } = useQrPayload();
+
+  // Colors / quiet zone can make a rendered code hard or impossible to scan —
+  // surface that next to the preview, where the change is visible.
+  const scannability = getScannabilityWarnings(
+    customization.foregroundColor,
+    customization.backgroundColor,
+    customization.quietZone,
+  );
+  const warning = validation.warnings[0] ?? scannability[0];
 
   const previewMaxSize = 304;
   const displaySize = Math.min(customization.size, previewMaxSize);
@@ -39,7 +49,7 @@ export function PreviewPanel() {
                 className="flex items-center justify-center transition-[width,height] duration-200"
                 style={{ width: displaySize, height: displaySize }}
                 role="img"
-                aria-label={`QR code for ${activeType}: ${payload.value.slice(0, 60)}`}
+                aria-label={`QR code for ${activeType}`}
                 dangerouslySetInnerHTML={{ __html: svgString }}
               />
             ) : payload.value.length > 0 ? (
@@ -101,10 +111,10 @@ export function PreviewPanel() {
               <ShieldAlert size={14} className="shrink-0 text-text-secondary" />
               <p className="truncate text-xs text-text-secondary">{validation.errors[0]}</p>
             </div>
-          ) : validation.warnings.length > 0 ? (
+          ) : warning ? (
             <div className="flex h-full items-center gap-2 px-3">
               <TriangleAlert size={14} className="shrink-0 text-text-secondary" />
-              <p className="truncate text-xs text-text-secondary">{validation.warnings[0]}</p>
+              <p className="truncate text-xs text-text-secondary">{warning}</p>
             </div>
           ) : (
             <div className="flex h-full items-center justify-between px-3 text-xs text-text-secondary">

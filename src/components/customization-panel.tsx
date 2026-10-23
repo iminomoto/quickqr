@@ -34,18 +34,23 @@ function ButtonGroup<T extends string>({
   options,
   value,
   onChange,
+  label,
 }: {
   options: { value: T; label: string; icon?: string; desc?: string }[];
   value: T;
   onChange: (v: T) => void;
+  /** Accessible name for the group (screen readers announce "… group"). */
+  label: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1">
       {options.map((opt) => {
         const isActive = value === opt.value;
         return (
           <motion.button
             key={opt.value}
+            role="radio"
+            aria-checked={isActive}
             onClick={() => onChange(opt.value)}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
@@ -103,6 +108,7 @@ export function CustomizationPanel() {
             options={EC_LEVELS}
             value={customization.errorCorrectionLevel}
             onChange={(v) => setCustomization({ errorCorrectionLevel: v })}
+            label="Error correction level"
           />
         </Field>
 
@@ -112,10 +118,12 @@ export function CustomizationPanel() {
           <Field label="Foreground">
             <div className="flex items-center gap-1.5">
               <ColorPicker
+                label="foreground"
                 value={customization.foregroundColor}
                 onChange={(c) => setCustomization({ foregroundColor: c })}
               />
               <HexColorInput
+                label="foreground"
                 value={customization.foregroundColor}
                 onChange={(c) => setCustomization({ foregroundColor: c })}
               />
@@ -124,10 +132,12 @@ export function CustomizationPanel() {
           <Field label="Background">
             <div className="flex items-center gap-1.5">
               <ColorPicker
+                label="background"
                 value={customization.backgroundColor}
                 onChange={(c) => setCustomization({ backgroundColor: c })}
               />
               <HexColorInput
+                label="background"
                 value={customization.backgroundColor}
                 onChange={(c) => setCustomization({ backgroundColor: c })}
               />
@@ -142,6 +152,7 @@ export function CustomizationPanel() {
             options={DOT_STYLES}
             value={customization.dotStyle}
             onChange={(v) => setCustomization({ dotStyle: v })}
+            label="Dot style"
           />
         </Field>
 
@@ -150,6 +161,7 @@ export function CustomizationPanel() {
             options={EYE_FRAME_STYLES}
             value={customization.eyeFrameStyle}
             onChange={(v) => setCustomization({ eyeFrameStyle: v })}
+            label="Eye frame style"
           />
         </Field>
 
@@ -158,6 +170,7 @@ export function CustomizationPanel() {
             options={EYE_BALL_STYLES}
             value={customization.eyeBallStyle}
             onChange={(v) => setCustomization({ eyeBallStyle: v })}
+            label="Eye ball style"
           />
         </Field>
 
@@ -178,6 +191,7 @@ export function CustomizationPanel() {
             }`}
             role="switch"
             aria-checked={customization.quietZone}
+            aria-label="Quiet zone"
           >
             <span
               className={`absolute top-1 left-1 h-4 w-4 rounded-md bg-text-primary transition-transform duration-200 ${

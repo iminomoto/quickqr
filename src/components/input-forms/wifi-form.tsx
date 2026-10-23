@@ -26,12 +26,14 @@ export function WifiForm() {
         />
       </Field>
       <Field label="Security">
-        <div className="flex gap-1">
+        <div role="radiogroup" aria-label="Security" className="flex gap-1">
           {SECURITY_OPTIONS.map((opt) => {
             const isActive = fields.security === opt.value;
             return (
               <motion.button
                 key={opt.value}
+                role="radio"
+                aria-checked={isActive}
                 onClick={() => updateField("security", opt.value)}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}

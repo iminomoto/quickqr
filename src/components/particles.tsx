@@ -29,7 +29,7 @@ export function Particles() {
       {particles.map((p) => (
         <div
           key={p.id}
-          className="absolute rounded-full"
+          className="particle absolute rounded-full"
           style={{
             left: `${p.x}%`,
             top: `${p.y}%`,

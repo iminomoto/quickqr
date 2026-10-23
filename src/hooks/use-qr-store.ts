@@ -202,11 +202,6 @@ export function useQrFields<T extends QrType>(type: T): QrFieldsMap[T] {
   return useQrStore((s) => s.fields[type]);
 }
 
-// Read the active type's fields as the QrFields union.
-export function useActiveQrFields(): QrFields {
-  return useQrStore((s) => s.fields[s.activeType]);
-}
-
 // Migrate persisted state from older store versions to the current shape.
 function migrateState(persisted: unknown, version: number): unknown {
   if (!persisted || typeof persisted !== "object") {

@@ -77,6 +77,8 @@ export function FaqSection() {
             <div key={i} className="glass">
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                aria-expanded={openIndex === i}
+                aria-controls={`faq-answer-${i}`}
                 className="flex w-full cursor-pointer items-center justify-between gap-4 p-4 text-sm font-medium text-text-primary"
               >
                 {faq.question}
@@ -90,6 +92,7 @@ export function FaqSection() {
               <AnimatePresence initial={false}>
                 {openIndex === i && (
                   <motion.div
+                    id={`faq-answer-${i}`}
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

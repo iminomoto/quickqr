@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion } from "motion/react";
 import { markSplashSeen } from "@/lib/splash-utils";
 
@@ -82,17 +82,36 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [show, setShow] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
   const onCompleteRef = useRef(onComplete);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
   });
 
+  // Single completion path (timed or skipped) — idempotent so a skip racing
+  // the timer can't double-fire the completion side effects.
+  const complete = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    markSplashSeen();
+    onCompleteRef.current();
+  }, []);
+
+  // The intro must never trap people: Escape (or a click anywhere) skips it.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault();
+        complete();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [complete]);
+
   useEffect(() => {
     if (reducedMotion) {
-      const t = setTimeout(() => {
-        markSplashSeen();
-        onCompleteRef.current();
-      }, 600);
+      const t = setTimeout(complete, 600);
       return () => clearTimeout(t);
     }
 
@@ -110,8 +129,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       await new Promise((r) => setTimeout(r, HOLD_DURATION));
 
       if (!mounted) return;
-      markSplashSeen();
-      onCompleteRef.current();
+      complete();
     };
 
     const timeout = setTimeout(run, 100);
@@ -120,7 +138,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       mounted = false;
       clearTimeout(timeout);
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, complete]);
 
   const getRowClassName = (animation: string, isHero?: boolean) => {
     const base = "splash-row-text";
@@ -132,9 +150,18 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
   return (
     <motion.div
       className="splash-screen"
+      onClick={complete}
       exit={{ y: "-100%", transition: { duration: EXIT_DURATION / 1000, ease: [0.16, 1, 0.3, 1] } }}
     >
       <div className="splash-bg" />
+
+      <button
+        type="button"
+        onClick={complete}
+        className="absolute bottom-6 right-6 z-10 rounded-md border border-border-subtle bg-bg-surface/60 px-3 py-1.5 text-xs text-text-secondary backdrop-blur-sm transition-colors hover:text-text-primary"
+      >
+        Skip
+      </button>
 
       <motion.div
         className="splash-content"

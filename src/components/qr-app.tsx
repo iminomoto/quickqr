@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, MotionConfig } from "motion/react";
 import { Plus } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Header } from "@/components/header";
@@ -95,7 +95,7 @@ export function QrApp() {
   }
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <AnimatePresence>
         {showSplash && (
           <SplashScreen
@@ -104,7 +104,12 @@ export function QrApp() {
         )}
       </AnimatePresence>
 
-      <div className={`noise relative min-h-screen transition-opacity duration-300 ${contentVisible ? "opacity-100" : "opacity-0"}`}>
+      {/* inert while the splash is up: the UI behind it is only faded out, so
+          without this it stays keyboard-focusable while invisible. */}
+      <div
+        inert={showSplash}
+        className={`noise relative min-h-screen transition-opacity duration-300 ${contentVisible ? "opacity-100" : "opacity-0"}`}
+      >
         <div className="bg-lightburst" />
         <Particles />
 
@@ -251,6 +256,6 @@ export function QrApp() {
         </footer>
       </div>
       </div>
-    </>
+    </MotionConfig>
   );
 }
