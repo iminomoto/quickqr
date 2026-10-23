@@ -33,3 +33,11 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_SITE_URL: https://quickqr.example.com
+
+      # E2E reuses the build output from the previous step (see
+      # playwright.config.ts: CI only starts the server).
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E
+        run: npm run test:e2e

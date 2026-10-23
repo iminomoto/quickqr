@@ -31,6 +31,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run typecheck` | Run TypeScript (no emit) |
 | `npm test` | Run Vitest unit tests |
 | `npm run test:watch` | Run Vitest in watch mode |
+| `npm run test:e2e` | Run Playwright E2E tests (builds + starts a server first) |
 
 ## Configuration
 

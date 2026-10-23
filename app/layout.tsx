@@ -26,13 +26,13 @@ const bebasNeue = localFont({
 });
 
 const stretchPro = localFont({
-  src: "../src/fonts/StretchPro-Regular.otf",
+  src: "../src/fonts/StretchPro-Regular.woff2",
   variable: "--font-stretch",
   display: "swap",
 });
 
 const roTheFight = localFont({
-  src: "../src/fonts/RoTheFight-Regular.otf",
+  src: "../src/fonts/RoTheFight-Regular.woff2",
   variable: "--font-rothefight",
   display: "swap",
 });

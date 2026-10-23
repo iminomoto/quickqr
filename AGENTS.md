@@ -42,6 +42,7 @@ Zustand store in `src/hooks/use-qr-store.ts`, persisted to localStorage as `qr-h
 
 - Vitest runs in a **node** environment (`vitest.config.ts`): no jsdom, so no DOM/component tests today. Tests are colocated (`src/**/*.test.ts`) and must explicitly import `describe`/`it`/`expect` from `vitest` (`globals: false`).
 - `use-qr-store.test.ts` prints zustand "storage currently unavailable" warnings — expected in the node env, not a failure.
+- Playwright E2E (`e2e/app.spec.ts`, `playwright.config.ts`) covers what node tests can't: splash dismissal + inert gating, ARIA semantics (radiogroups, FAQ accordion), and the scannability warning bar. `npm run test:e2e` builds and serves on port 3200 locally; in CI it reuses the build step's output. Vitest only picks up `src/**`, so the suites never collide. Note `text=/.../` locators match substrings anywhere — scope them (e.g. to warning phrases) or they'll hit settings labels.
 
 ## Env & Docker
 
@@ -50,4 +51,5 @@ Zustand store in `src/hooks/use-qr-store.ts`, persisted to localStorage as `qr-h
 - `src/lib/site.ts` sanitizes the value (empty → unset, adds a missing `https://`, strips quotes/slashes) and falls back to the placeholder instead of throwing — compose passes `""` when nothing is configured, and `new URL()` in `app/layout.tsx` would crash at module evaluation. Don't read `process.env.NEXT_PUBLIC_SITE_URL` anywhere else.
 - Security headers (incl. a production-only CSP) live in `next.config.ts` `headers()`. Verify new external scripts/fonts/images against the CSP before adding them.
 - Prod: `docker compose up prod` (multi-stage, `output: "standalone"`, HEALTHCHECK on `/`). Dev: `docker compose --profile dev up app` (bind-mounts `./src` and `./app`, published on host port **3001** so it can run beside prod).
-- CI: `.github/workflows/ci.yml` runs lint → typecheck → test → build on pushes/PRs. Local git identity is set repo-locally (`QuickQR <quickqr@localhost>`).
+- CI: `.github/workflows/ci.yml` runs lint → typecheck → unit tests → build → Playwright E2E on pushes/PRs. Local git identity is set repo-locally (`QuickQR <quickqr@localhost>`).
+- Fonts are **woff2 only** (`src/fonts/*.woff2`) — `next/font/local` loads them in `app/layout.tsx`. Don't add OTF/TTF; convert with `fontTools` (`TTFont(...).flavor = "woff2"`) if a new font is ever needed. The decorative background (`public/lightburst-bg.webp`, 14KB) is webp-only; the old 1.3MB PNG fallback was removed.

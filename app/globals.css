@@ -47,7 +47,9 @@ body {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-image: image-set(url("/lightburst-bg.webp") type("image/webp"), url("/lightburst-bg.png") type("image/png"));
+  /* Webp only: the old image-set() carried a 1.3MB PNG fallback that no browser
+   made in the last decade would ever fetch. */
+  background-image: url("/lightburst-bg.webp");
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
