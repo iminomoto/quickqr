@@ -1,0 +1,26 @@
+node_modules
+dist
+.git
+*.zip
+*.md
+eslint.config.js
+
+# Local build artifacts — rebuilt inside the image. Excluding .next keeps
+# ~180MB of previous output (incl. its bundled node_modules) out of the
+# build context.
+.next
+out
+tsconfig.tsbuildinfo
+
+# Never send local env files into the image; pass values via build args
+# (docker-compose build args / .env is read by compose for interpolation).
+.env
+.env.*
+!.env.example
+
+# Not needed inside the build context.
+docker-compose.yml
+Dockerfile
+.dockerignore
+.vscode
+.idea

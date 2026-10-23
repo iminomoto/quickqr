@@ -1,0 +1,3 @@
+docker compose --profile dev up --build app
+docker compose --profile dev down --rmi local
+docker image prune
