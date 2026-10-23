@@ -1,5 +1,7 @@
 # QuickQR
 
+[![CI](https://github.com/iminomoto/quickqr/actions/workflows/ci.yml/badge.svg)](https://github.com/iminomoto/quickqr/actions/workflows/ci.yml)
+
 Free QR code generator built with Next.js, React, and TypeScript.
 
 Generate custom QR codes for URLs, text, email, phone, WiFi, and vCard with customizable colors, styles, and sizes. Client-side generation — no data sent to a server.
