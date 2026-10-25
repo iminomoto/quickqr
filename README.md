@@ -22,6 +22,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+The E2E suite needs Playwright's browser on first run:
+
+```bash
+npx playwright install chromium
+```
+
 ## Scripts
 
 | Command | Description |
@@ -33,7 +39,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run typecheck` | Run TypeScript (no emit) |
 | `npm test` | Run Vitest unit tests |
 | `npm run test:watch` | Run Vitest in watch mode |
-| `npm run test:e2e` | Run Playwright E2E tests (builds + starts a server first) |
+| `npm run test:e2e` | Run Playwright E2E tests (builds + starts a server locally; CI reuses the build step) |
 
 ## Configuration
 
@@ -64,20 +70,27 @@ docker compose up prod --build
 Production responses include security headers (nosniff, frame denial,
 referrer policy, HSTS, and a CSP) configured in `next.config.ts`.
 
+For a full server deployment — Docker install, verification, HTTPS with Caddy,
+firewall, day-2 operations, and troubleshooting — see
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs `npm ci`, lint, typecheck, tests, and a
-production build on every push to `main` and every pull request.
+`.github/workflows/ci.yml` runs `npm ci`, lint, typecheck, unit tests, and a
+production build on every push to `main` and every pull request, then installs
+Playwright's Chromium and runs the E2E suite against that build.
 
 ## Project Structure
 
 ```
-app/              Next.js App Router pages and routes
+app/              Next.js App Router pages, error boundaries, sitemap/robots/OG
 src/
-  components/     React UI components
-  hooks/          Zustand store
-  lib/            QR payload builders, renderer, utilities
+  components/     React UI components (input-forms/ per QR type)
+  hooks/          Zustand store, payload memoization, mount hooks
+  lib/            QR payload builders, renderer, utilities, site config
   types/          TypeScript interfaces
-  fonts/          Local font files
-public/           Static assets (favicon, background image)
+  fonts/          Local font files (woff2)
+public/           Static assets (favicon, PWA icons, manifest, background image)
+e2e/              Playwright specs
+docs/             Deployment guide (see docs/DEPLOYMENT.md)
 ```
